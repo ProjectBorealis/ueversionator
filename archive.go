@@ -156,13 +156,33 @@ func extract(asset, path, dest string) error {
 	// remove archive once extracted
 	defer os.Remove(path)
 
+	// file count
+	files := func() (files int) {
+		sz, err := go7z.OpenReader(path)
+		if err != nil {
+			return 0
+		}
+		defer sz.Close()
+
+		for {
+			_, err := sz.Next()
+			if err != nil {
+				break
+			}
+			files++
+		}
+		return
+	}()
+
 	sz, err := go7z.OpenReader(path)
 	if err != nil {
 		return err
 	}
 	defer sz.Close()
 
-	log.Printf("Extracting %s...\n", asset)
+	log.Printf("Extracting %s (%d files)...\n", asset, files)
+	extracted := 0
+	lastUpdate := time.Now()
 	for {
 		hdr, err := sz.Next()
 		if err == io.EOF {
@@ -195,6 +215,12 @@ func extract(asset, path, dest string) error {
 
 		if _, err := io.Copy(f, sz); err != nil {
 			return err
+		}
+
+		extracted++
+		if time.Since(lastUpdate) > time.Second || extracted == files {
+			log.Printf("Extracting %s (%d/%d)...\n", asset, extracted, files)
+			lastUpdate = time.Now()
 		}
 	}
 
