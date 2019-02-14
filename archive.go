@@ -20,11 +20,12 @@ import (
 	"github.com/saracen/go7z"
 )
 
-const EngineAssociationPrefix = "ue4versionator:"
+// EngineAssociationPrefix is the required engine association prefix.
+const EngineAssociationPrefix = "ue4v:"
 
 // ErrEngineAssociationNeedsPrefix is returned if the association has no
-// ue4versionator prefix.
-var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4versionator:' prefix")
+// ue4v prefix.
+var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4v:' prefix")
 
 // DownloadOptions specifies what content for the version to download.
 type DownloadOptions struct {

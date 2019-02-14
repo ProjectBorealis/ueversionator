@@ -22,12 +22,12 @@ Usage of ue4versionator:
 ### uproject association
 
 A UE4 uproject file's `EngineAssociation` key needs to be modified with a
-`ue4versionator:` prefix, followed by the version of the custom build.
+`ue4v:` prefix, followed by the version of the custom build.
 
 ```
 {
     "FileVersion": 3,
-    "EngineAssociation": "ue4versionator:4.21-custom",
+    "EngineAssociation": "ue4v:4.21-custom",
     "Category": "",
     "Description": "",
     "Modules": [
@@ -49,7 +49,7 @@ baseurl = https://downloads.domain.com/builds
 
 ue4versionator expects builds to be found under this location, with the
 filename `engine-<version>.7z`, where the version matches the
-`EngineAssociation` key without the `ue4versionator:` prefix. So for the
+`EngineAssociation` key without the `ue4v:` prefix. So for the
 uproject example above, the build would be expected to be found at
 `https://downloads.domain.com/builds/engine-4.21-custom.7z`.
 
