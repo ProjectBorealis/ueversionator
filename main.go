@@ -57,7 +57,7 @@ func main() {
 	}
 
 	log.Printf("Registering %s\n", version)
-	key, err := registry.OpenKey(registry.CURRENT_USER, `Software\Epic Games\Unreal Engine\Builds`, registry.QUERY_VALUE|registry.SET_VALUE)
+	key, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Epic Games\Unreal Engine\Builds`, registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
 		handleError(err)
 	}
