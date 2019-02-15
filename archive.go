@@ -203,6 +203,7 @@ func extract(asset, path, dest string) error {
 			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
 				return err
 			}
+			extracted++
 			continue
 		}
 
@@ -212,9 +213,11 @@ func extract(asset, path, dest string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
-
-		if _, err := io.Copy(f, sz); err != nil {
+		if _, err = io.Copy(f, sz); err != nil {
+			f.Close()
+			return err
+		}
+		if err = f.Close(); err != nil {
 			return err
 		}
 
@@ -225,6 +228,9 @@ func extract(asset, path, dest string) error {
 		}
 	}
 
+	if extracted != files {
+		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
+	}
 	return nil
 }
 
