@@ -44,14 +44,14 @@ from.
 
 ```
 [ue4versionator]
-baseurl = https://downloads.domain.com/builds
+baseurl = https://downloads.example.com/builds
 ```
 
 ue4versionator expects builds to be found under this location, with the
 filename `engine-<version>.7z`, where the version matches the
 `EngineAssociation` key without the `ue4v:` prefix. So for the
 uproject example above, the build would be expected to be found at
-`https://downloads.domain.com/builds/engine-4.21-custom.7z`.
+`https://downloads.example.com/builds/engine-4.21-custom.7z`.
 
 If `--with-symbols` is used, a debugging symbols archive is expected to be
 found with the filename `symbols-<version>.7z`.
