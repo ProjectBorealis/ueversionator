@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -71,13 +70,9 @@ func FetchEngine(baseURL, version string, options DownloadOptions) (string, erro
 		return "", ErrEngineAssociationNeedsPrefix
 	}
 
-	user, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-
 	name := strings.TrimPrefix(version, EngineAssociationPrefix)
-	dest := filepath.Join(user.HomeDir, ".ue4", name)
+	gitDir, err := filepath.Abs(".git")
+	dest := filepath.Join(gitDir, ".ue4", name)
 
 	assetInfo := []struct {
 		name    string
