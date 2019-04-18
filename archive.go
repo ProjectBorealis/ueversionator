@@ -71,12 +71,8 @@ func FetchEngine(baseURL, version string, options DownloadOptions) (string, erro
 	}
 
 	name := strings.TrimPrefix(version, EngineAssociationPrefix)
-	stat, err := os.Stat(".git")
-	if err != nil || !stat.Mode().IsDir() {
-	   return "", errors.New(".git directory does not exist in this path")
-	}
-	gitDir, err := filepath.Abs(".git")
-	dest := filepath.Join(gitDir, ".ue4", name)
+	rootDir, err := filepath.Abs("..")
+	dest := filepath.Join(rootDir, ".ue4", name)
 
 	assetInfo := []struct {
 		name    string
