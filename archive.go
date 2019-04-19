@@ -249,6 +249,7 @@ func extract(asset, path, dest string) (err error) {
 		if err = f.Close(); err != nil {
 			return err
 		}
+		os.Chtimes(fpath, hdr.AccessedAt, hdr.ModifiedAt)
 
 		extracted++
 		if time.Since(lastUpdate) > time.Second || extracted == files {
