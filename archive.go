@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -127,6 +128,12 @@ func download(baseURL, dest, asset, version string) error {
 		if err != nil {
 			return err
 		}
+		if resp.Header.Get("Content-Length") != "" {
+			size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+			if err == nil && int64(size) == fi.Size() {
+				return extract(asset, archivePath, dest)
+			}
+		}
 		if resp.Header.Get("Accept-Ranges") == "bytes" {
 			req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
 		}
@@ -165,7 +172,6 @@ func download(baseURL, dest, asset, version string) error {
 	defer body.Close()
 
 	// copy to temp file
-	path := file.Name()
 	_, err = io.Copy(file, io.TeeReader(body, &writeCounter{
 		name:    asset,
 		total:   uint64(size),
@@ -175,7 +181,7 @@ func download(baseURL, dest, asset, version string) error {
 		return err
 	}
 
-	return extract(asset, path, dest)
+	return extract(asset, archivePath, dest)
 }
 
 func extract(asset, path, dest string) (err error) {
