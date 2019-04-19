@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -65,14 +65,13 @@ func GetEngineAssociation(path string) (string, error) {
 }
 
 // FetchEngine fetches the engine based on engine association string.
-func FetchEngine(baseURL, version string, options DownloadOptions) (string, error) {
+func FetchEngine(rootDir string, baseURL, version string, options DownloadOptions) (string, error) {
 	if !strings.HasPrefix(version, EngineAssociationPrefix) {
 		return "", ErrEngineAssociationNeedsPrefix
 	}
 
 	name := strings.TrimPrefix(version, EngineAssociationPrefix)
-	rootDir, err := filepath.Abs("..")
-	dest := filepath.Join(rootDir, ".ue4", name)
+	dest := filepath.Join(rootDir, name)
 
 	assetInfo := []struct {
 		name    string
@@ -104,6 +103,7 @@ func FetchEngine(baseURL, version string, options DownloadOptions) (string, erro
 	}
 	wg.Wait()
 
+	var err error
 	for idx := range assetInfo {
 		if assetInfo[idx].err != nil {
 			err = assetInfo[idx].err
@@ -119,38 +119,78 @@ func download(baseURL, dest, asset, version string) error {
 		return err
 	}
 
-	// download
-	log.Printf("Fetching %v\n", uri)
-	resp, err := http.Get(uri.String())
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	req, _ := http.NewRequest("GET", uri.String(), nil)
 
-	// create temp file
-	file, err := ioutil.TempFile("", "ue4")
-	if err != nil {
-		return err
+	// if archive exists, see if we can do a range request
+	archivePath := dest + ".7z"
+	if fi, err := os.Stat(archivePath); err == nil {
+		resp, err := http.Head(uri.String())
+		if err != nil {
+			return err
+		}
+		if resp.Header.Get("Content-Length") != "" {
+			size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+			if err == nil && int64(size) == fi.Size() {
+				return extract(asset, archivePath, dest)
+			}
+		}
+		if resp.Header.Get("Accept-Ranges") == "bytes" {
+			req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
+		}
 	}
-	defer file.Close()
+
+	var file *os.File
+	var body io.ReadCloser
+	var size int64
+	for i := 0; i < 2; i++ {
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		body = resp.Body
+		size = resp.ContentLength
+
+		switch resp.StatusCode {
+		case http.StatusOK:
+			log.Printf("Fetching %v\n", uri)
+			file, err = os.Create(archivePath)
+
+		case http.StatusPartialContent:
+			log.Printf("Resuming %v\n", uri)
+			file, err = os.OpenFile(archivePath, os.O_WRONLY|os.O_APPEND, 0644)
+
+		case http.StatusRequestedRangeNotSatisfiable:
+			req.Header.Del("Range")
+			continue
+
+		}
+		if err != nil {
+			return err
+		}
+		break
+	}
+	defer body.Close()
 
 	// copy to temp file
-	path := file.Name()
-	_, err = io.Copy(file, io.TeeReader(resp.Body, &writeCounter{
+	_, err = io.Copy(file, io.TeeReader(body, &writeCounter{
 		name:    asset,
-		total:   uint64(resp.ContentLength),
+		total:   uint64(size),
 		started: time.Now(),
 	}))
 	if err != nil {
 		return err
 	}
 
-	return extract(asset, path, dest)
+	return extract(asset, archivePath, dest)
 }
 
-func extract(asset, path, dest string) error {
+func extract(asset, path, dest string) (err error) {
 	// remove archive once extracted
-	defer os.Remove(path)
+	defer func() {
+		if err == nil {
+			err = os.Remove(path)
+		}
+	}()
 
 	// file count
 	files := func() (files int) {
@@ -215,6 +255,7 @@ func extract(asset, path, dest string) error {
 		if err = f.Close(); err != nil {
 			return err
 		}
+		os.Chtimes(fpath, hdr.AccessedAt, hdr.ModifiedAt)
 
 		extracted++
 		if time.Since(lastUpdate) > time.Second || extracted == files {
