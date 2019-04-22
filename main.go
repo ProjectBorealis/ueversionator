@@ -119,7 +119,8 @@ func getDownloadDirectory(path string) string {
 
 		fmt.Printf("\n\nSelect an option (%d-%d) and press enter: ", 1, len(options))
 
-		input, _ := bufio.NewReader(os.Stdin).ReadByte()
+		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		input = strings.TrimSpace(input)
 		parsed, _ := strconv.ParseInt(string(input), 10, 8)
 
 		chosen := int(parsed) - 1
