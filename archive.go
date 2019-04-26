@@ -122,7 +122,7 @@ func download(baseURL, dest, asset, version string) error {
 	req, _ := http.NewRequest("GET", uri.String(), nil)
 
 	// if archive exists, see if we can do a range request
-	archivePath := dest + ".7z"
+	archivePath := dest + "-" + asset + ".7z"
 	if fi, err := os.Stat(archivePath); err == nil {
 		resp, err := http.Head(uri.String())
 		if err != nil {
