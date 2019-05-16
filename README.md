@@ -65,7 +65,7 @@ We create our custom builds and archive them with the following commands:
 
 ```
 # Build UE4 engine
-.\Engine\Build\BatchFiles\RunUAT.bat BuildGraph -target="Make Installed Build Win64" -script="Engine/Build/InstalledEngineBuild.xml" -set:HostPlatformOnly=true -set:WithWin32=false -set:WithDDC=false
+.\Engine\Build\BatchFiles\RunUAT.bat BuildGraph -Target="Make Installed Build Win64" -Script="Engine/Build/InstalledEngineBuild.xml" -Set:WithWin32=false -Set:WithAndroid=false -Set:WithHTML5=false -Set:WithLumin=false -Set:WithFeaturePacks=false -CompatibleChange=%CHANGELIST%
 
 # Create archive without debugging symbols
 7z.exe a -bsp1 -mx9 -md512m -mfb273 -mlc4 -mmt24 engine-%VERSION%.7z LocalBuilds\Engine\Windows\Engine\ -r -x^!*.pdb
