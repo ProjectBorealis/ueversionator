@@ -63,6 +63,7 @@ func main() {
 	if err != nil {
 		handleError(err)
 	}
+	handleError(os.MkdirAll(downloadDir, 0777))
 
 	dest, err := FetchEngine(downloadDir, baseURL.String(), version, DownloadOptions{
 		FetchEngine:  *fetchEngine,
