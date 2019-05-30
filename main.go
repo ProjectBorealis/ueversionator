@@ -59,7 +59,10 @@ func main() {
 		handleError(fmt.Errorf("error finding engine association with path %s: %v", path, err))
 	}
 
-	downloadDir := getDownloadDirectory(path)
+	downloadDir, err := filepath.Abs(getDownloadDirectory(path))
+	if err != nil {
+		handleError(err)
+	}
 
 	dest, err := FetchEngine(downloadDir, baseURL.String(), version, DownloadOptions{
 		FetchEngine:  *fetchEngine,
