@@ -19,7 +19,7 @@ import (
 var (
 	iniConfig     = flag.String("config", ".ue4versionator", "ue4versionator config file")
 	userIniConfig = flag.String("user-config", ".ue4v-user", "ue4versionator user config file")
-	fetchEngine   = flag.Bool("with-engine", true, "download and unpack UE4 engine build")
+	bundle        = flag.String("bundle", "engine", "request UE4 build bundle")
 	fetchSymbols  = flag.Bool("with-symbols", false, "download and unpack UE4 engine debug symbols")
 	virgin        = flag.Bool("virgin", false, "ask configuration options like the first time")
 )
@@ -66,7 +66,7 @@ func main() {
 	handleError(os.MkdirAll(downloadDir, 0777))
 
 	dest, err := FetchEngine(downloadDir, baseURL.String(), version, DownloadOptions{
-		FetchEngine:  *fetchEngine,
+		EngineBundle: *bundle,
 		FetchSymbols: *fetchSymbols,
 	})
 	if err != nil {
@@ -125,11 +125,11 @@ func getDownloadDirectory(path string) string {
 
 		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		input = strings.TrimSpace(input)
-		parsed, _ := strconv.ParseInt(string(input), 10, 8)
+		parsed, _ := strconv.ParseInt(input, 10, 8)
 
 		chosen := int(parsed) - 1
-		if chosen < 0 || int(chosen) >= len(options) {
-			fmt.Printf("Invalid '%s' option. Try again:\n\n", string(input))
+		if chosen < 0 || chosen >= len(options) {
+			fmt.Printf("Invalid '%s' option. Try again:\n\n", input)
 			continue
 		}
 

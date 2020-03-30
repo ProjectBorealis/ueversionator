@@ -28,7 +28,7 @@ var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4v
 
 // DownloadOptions specifies what content for the version to download.
 type DownloadOptions struct {
-	FetchEngine  bool
+	EngineBundle string
 	FetchSymbols bool
 }
 
@@ -64,6 +64,18 @@ func GetEngineAssociation(path string) (string, error) {
 	return uproject.EngineAssociation, err
 }
 
+// GetBundleVerificationFile returns the file that should exist for this bundle as a basic integrity check
+//
+// If the bundle contains "engine", then it is considered an engine bundle, and thus must include UE4Game.
+// Else, it is considered an editor bundle, and must include UE4Editor.
+func GetBundleVerificationFile(bundle string) string {
+	if strings.Contains(bundle, "engine") {
+		return "Engine/Binaries/Win64/UE4Game."
+	} else {
+		return "Engine/Binaries/Win64/UE4Editor."
+	}
+}
+
 // FetchEngine fetches the engine based on engine association string.
 func FetchEngine(rootDir string, baseURL, version string, options DownloadOptions) (string, error) {
 	if !strings.HasPrefix(version, EngineAssociationPrefix) {
@@ -79,8 +91,8 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 		exists  string
 		err     error
 	}{
-		{"engine", options.FetchEngine, "Engine/Binaries/Win64/UE4Editor.exe", nil},
-		{"symbols", options.FetchSymbols, "Engine/Binaries/Win64/UE4Editor.pdb", nil},
+		{options.EngineBundle, true, GetBundleVerificationFile(options.EngineBundle) + "exe", nil},
+		{options.EngineBundle + "-symbols", options.FetchSymbols, GetBundleVerificationFile(options.EngineBundle) + "pdb", nil},
 	}
 
 	var wg sync.WaitGroup
