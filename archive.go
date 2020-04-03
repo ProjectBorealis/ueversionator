@@ -66,11 +66,11 @@ func GetEngineAssociation(path string) (string, error) {
 
 // GetBundleVerificationFile returns the file that should exist for this bundle as a basic integrity check
 //
-// If the bundle contains "engine", then it is considered an engine bundle, and thus must include UE4Game.
+// If the bundle contains "engine", then it is considered an engine bundle, and thus must include UE4Game-Win64-Shipping.
 // Else, it is considered an editor bundle, and must include UE4Editor.
 func GetBundleVerificationFile(bundle string) string {
 	if strings.Contains(bundle, "engine") {
-		return "Engine/Binaries/Win64/UE4Game."
+		return "Engine/Binaries/Win64/UE4Game-Win64-Shipping."
 	} else {
 		return "Engine/Binaries/Win64/UE4Editor."
 	}
