@@ -19,7 +19,7 @@ import (
 var (
 	iniConfig     = flag.String("config", ".ue4versionator", "ue4versionator config file")
 	userIniConfig = flag.String("user-config", ".ue4v-user", "ue4versionator user config file")
-	bundle        = flag.String("bundle", "engine", "request UE4 build bundle")
+	bundle        = flag.String("bundle", "editor", "request UE4 build bundle")
 	fetchSymbols  = flag.Bool("with-symbols", false, "download and unpack UE4 engine debug symbols")
 	virgin        = flag.Bool("virgin", false, "ask configuration options like the first time")
 )
