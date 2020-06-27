@@ -105,13 +105,13 @@ func getDownloadDirectory(path string) string {
 	const custom = "custom location"
 
 	if user, err := user.Current(); err == nil {
-		options = append(options, filepath.Join(user.HomeDir, ".ue4"))
+		options = append(options, filepath.Join(user.HomeDir, "ue4"))
 	}
-	if abs, err := filepath.Abs(filepath.Join(path, "..", ".ue4")); err == nil {
+	if abs, err := filepath.Abs(filepath.Join(path, "..", "ue4")); err == nil {
 		options = append(options, abs)
 	}
 	if runtime.GOOS == "windows" {
-		options = append(options, filepath.Join(filepath.VolumeName(path), "/", ".ue4"))
+		options = append(options, filepath.Join(filepath.VolumeName(path), "/", "ue4"))
 	}
 	options = append(options, custom)
 
