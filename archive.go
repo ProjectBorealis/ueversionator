@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,8 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/git-lfs/git-lfs/tools/humanize"
-	"github.com/ProjectBorealis/go7z"
+	"github.com/saracen/go7z"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
@@ -296,7 +296,54 @@ func (wc *writeCounter) Write(p []byte) (int, error) {
 
 	if progress := int(float64(wc.written) / float64(wc.total) * 100); progress > wc.progress {
 		wc.progress = progress
-		log.Printf("%s - %s / %s (%d%%) %s\n", wc.name, humanize.FormatBytes(wc.written), humanize.FormatBytes(wc.total), progress, humanize.FormatByteRate(wc.written, time.Since(wc.started)))
+		log.Printf("%s - %s / %s (%d%%) %s\n", wc.name, formatBytes(wc.written), formatBytes(wc.total), progress, formatByteRate(wc.written, time.Since(wc.started)))
 	}
 	return n, nil
+}
+
+// Below code (formatBytes and formatByteRate) is based on saracen/lfscache
+// Copyright (c) 2018 Arran Walker
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+const (
+	unit     = 1000
+	prefixes = "KMGTPE"
+)
+
+func formatBytes(b uint64) string {
+	if b < unit {
+		return fmt.Sprintf("%dB", b)
+	}
+
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), prefixes[exp])
+}
+
+func formatByteRate(s uint64, d time.Duration) string {
+	b := uint64(float64(s) / math.Max(time.Nanosecond.Seconds(), d.Seconds()))
+	if b < unit {
+		return fmt.Sprintf("%dB/s", b)
+	}
+
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	return fmt.Sprintf("%.1f %cB/s", float64(b)/float64(div), prefixes[exp])
 }

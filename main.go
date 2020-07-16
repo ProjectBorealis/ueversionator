@@ -65,9 +65,18 @@ func main() {
 	}
 	handleError(os.MkdirAll(downloadDir, 0777))
 
+	shouldFetchSymbols := *fetchSymbols
+
+	if !shouldFetchSymbols {
+		symbolsConfig, err := cfg.Section("ue4v-user").GetKey("symbols")
+		if err == nil {
+			shouldFetchSymbols = symbolsConfig.MustBool(false)
+		}
+	}
+
 	dest, err := FetchEngine(downloadDir, baseURL.String(), version, DownloadOptions{
 		EngineBundle: *bundle,
-		FetchSymbols: *fetchSymbols,
+		FetchSymbols: shouldFetchSymbols,
 	})
 	if err != nil {
 		handleError(err)

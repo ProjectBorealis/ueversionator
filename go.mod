@@ -1,0 +1,12 @@
+module github.com/ProjectBorealis/ue4versionator
+
+go 1.14
+
+require (
+	github.com/go-ini/ini v1.57.0
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/saracen/go7z v0.0.0-20191010121135-9c09b6bd7fda
+	github.com/saracen/solidblock v0.0.0-20190426153529-45df20abab6f // indirect
+	github.com/ulikunitz/xz v0.5.7 // indirect
+	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae
+)
