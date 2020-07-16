@@ -126,7 +126,8 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 }
 
 func download(baseURL, dest, asset, version string) error {
-	uri, err := url.Parse(fmt.Sprintf("%s/%s-%s.7z", baseURL, asset, version))
+	urlStr := fmt.Sprintf("%s/%s-%s.7z", baseURL, asset, version)
+	uri, err := url.Parse(urlStr)
 	if err != nil {
 		return err
 	}
@@ -139,6 +140,9 @@ func download(baseURL, dest, asset, version string) error {
 		resp, err := http.Head(uri.String())
 		if err != nil {
 			return err
+		}
+		if resp.StatusCode >= 400 {
+			return errors.New(fmt.Sprintf("%s: %s", resp.Status, urlStr))
 		}
 		if resp.Header.Get("Content-Length") != "" {
 			size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
@@ -170,7 +174,6 @@ func download(baseURL, dest, asset, version string) error {
 		case http.StatusPartialContent:
 			log.Printf("Resuming %v\n", uri)
 			file, err = os.OpenFile(archivePath, os.O_WRONLY|os.O_APPEND, 0644)
-
 		case http.StatusRequestedRangeNotSatisfiable:
 			req.Header.Del("Range")
 			continue
@@ -178,6 +181,9 @@ func download(baseURL, dest, asset, version string) error {
 		}
 		if err != nil {
 			return err
+		}
+		if resp.StatusCode >= 400 {
+			return errors.New(fmt.Sprintf("%s: %s", resp.Status, urlStr))
 		}
 		break
 	}
