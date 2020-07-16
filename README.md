@@ -9,16 +9,18 @@ archive are supported.
 
 ```
 Usage of ue4versionator:
+  -assume-valid
+        assumes current archive is valid, if present
+  -bundle string
+        request UE4 build bundle (default "editor")
   -config string
         ue4versionator config file (default ".ue4versionator")
   -user-config string
         ue4versionator user config file (default ".ue4v-user")
   -virgin
         ask configuration options like the first time
-  -bundle
-        request UE4 build bundle
   -with-symbols
-        download and unpack UE4 engine debug symbols
+        include UE4 engine debug symbols
 ```
 
 ## Configuring ue4versionator

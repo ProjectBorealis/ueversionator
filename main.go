@@ -20,8 +20,9 @@ var (
 	iniConfig     = flag.String("config", ".ue4versionator", "ue4versionator config file")
 	userIniConfig = flag.String("user-config", ".ue4v-user", "ue4versionator user config file")
 	bundle        = flag.String("bundle", "editor", "request UE4 build bundle")
-	fetchSymbols  = flag.Bool("with-symbols", false, "download and unpack UE4 engine debug symbols")
+	fetchSymbols  = flag.Bool("with-symbols", false, "include UE4 engine debug symbols")
 	virgin        = flag.Bool("virgin", false, "ask configuration options like the first time")
+	assumeValid   = flag.Bool("assume-valid", false, "assumes current archive is valid, if present")
 )
 
 func main() {
@@ -77,6 +78,7 @@ func main() {
 	dest, err := FetchEngine(downloadDir, baseURL.String(), version, DownloadOptions{
 		EngineBundle: *bundle,
 		FetchSymbols: shouldFetchSymbols,
+		AssumeValid: *assumeValid,
 	})
 	if err != nil {
 		handleError(err)

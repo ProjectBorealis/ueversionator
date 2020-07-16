@@ -30,6 +30,7 @@ var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4v
 type DownloadOptions struct {
 	EngineBundle string
 	FetchSymbols bool
+	AssumeValid bool
 }
 
 // GetEngineAssociation returns a .uproject engine association.
@@ -110,7 +111,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 				return
 			}
 
-			assetInfo[i].err = download(baseURL, dest, assetInfo[i].name, name)
+			assetInfo[i].err = download(baseURL, rootDir, name, assetInfo[i].name, name, options.AssumeValid)
 		}(idx, version)
 	}
 	wg.Wait()
@@ -125,7 +126,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	return dest, err
 }
 
-func download(baseURL, dest, asset, version string) error {
+func download(baseURL, rootDir, name, asset, version string, assumeValid bool) error {
 	urlStr := fmt.Sprintf("%s/%s-%s.7z", baseURL, asset, version)
 	uri, err := url.Parse(urlStr)
 	if err != nil {
@@ -133,25 +134,30 @@ func download(baseURL, dest, asset, version string) error {
 	}
 
 	req, _ := http.NewRequest("GET", uri.String(), nil)
+	dest := filepath.Join(rootDir, name)
 
 	// if archive exists, see if we can do a range request
-	archivePath := dest + "-" + asset + ".7z"
+	archivePath := filepath.Join(rootDir, asset) + "-" + name + ".7z"
 	if fi, err := os.Stat(archivePath); err == nil {
-		resp, err := http.Head(uri.String())
-		if err != nil {
-			return err
-		}
-		if resp.StatusCode >= 400 {
-			return errors.New(fmt.Sprintf("%s: %s", resp.Status, urlStr))
-		}
-		if resp.Header.Get("Content-Length") != "" {
-			size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
-			if err == nil && int64(size) == fi.Size() {
-				return extract(asset, archivePath, dest)
+		if assumeValid {
+			return extract(asset, archivePath, dest)
+		} else {
+			resp, err := http.Head(uri.String())
+			if err != nil {
+				return err
 			}
-		}
-		if resp.Header.Get("Accept-Ranges") == "bytes" {
-			req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
+			if resp.StatusCode >= 400 {
+				return errors.New(fmt.Sprintf("%s: %s", resp.Status, urlStr))
+			}
+			if resp.Header.Get("Content-Length") != "" {
+				size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
+				if err == nil && int64(size) == fi.Size() {
+					return extract(asset, archivePath, dest)
+				}
+			}
+			if resp.Header.Get("Accept-Ranges") == "bytes" {
+				req.Header.Set("Range", fmt.Sprintf("bytes=%d-", fi.Size()))
+			}
 		}
 	}
 
