@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/saracen/go7z"
+	"github.com/ProjectBorealis/go7z"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.

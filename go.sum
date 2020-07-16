@@ -1,3 +1,5 @@
+github.com/ProjectBorealis/go7z v0.0.0-20190623190602-b3dd8f37eb91 h1:2iXNvZrI7Ejnpqx8DJ247KaRnxHsRV3fuMwZvOCR6Fw=
+github.com/ProjectBorealis/go7z v0.0.0-20190623190602-b3dd8f37eb91/go.mod h1:xl0r9WJScrzzv/pnarj0okGHmiRd/uD0wm/B+r8aAkg=
 github.com/git-lfs/git-lfs v1.5.6 h1:Nvlmm3+jjblfF7JLUQRyOZ+TocmhsP/IKXFZGileAyE=
 github.com/git-lfs/git-lfs v2.5.2+incompatible h1:HZyuAiTCvBbNQa1tgrpBzmb9iRn9GKD8MGiLgdqRs/8=
 github.com/git-lfs/git-lfs v2.5.2+incompatible/go.mod h1:OWQmiHEcQlu45gp/CzUQAR/VYwm1Pcxb3IB/RaB176U=
