@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/vbauerster/mpb/decor"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,9 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/briandowns/spinner"
-	"github.com/mattn/go-isatty"
 	"github.com/gen2brain/go-unarr"
+	"github.com/vbauerster/mpb"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
@@ -100,6 +100,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	}
 
 	var wg sync.WaitGroup
+	p := mpb.New(mpb.WithWaitGroup(&wg))
 	for idx := range assetInfo {
 		if !assetInfo[idx].enabled {
 			continue
@@ -114,7 +115,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 				return
 			}
 
-			assetInfo[i].err = download(baseURL, rootDir, name, assetInfo[i].name, name, options.AssumeValid)
+			assetInfo[i].err = download(p, baseURL, rootDir, name, assetInfo[i].name, name, options.AssumeValid)
 		}(idx, version)
 	}
 	wg.Wait()
@@ -129,7 +130,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	return dest, err
 }
 
-func download(baseURL, rootDir, name, asset, version string, assumeValid bool) error {
+func download(p *mpb.Progress, baseURL, rootDir, name, asset, version string, assumeValid bool) error {
 	urlStr := fmt.Sprintf("%s/%s-%s.7z", baseURL, asset, version)
 	uri, err := url.Parse(urlStr)
 	if err != nil {
@@ -143,7 +144,7 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 	archivePath := filepath.Join(rootDir, asset) + "-" + name + ".7z"
 	if fi, err := os.Stat(archivePath); err == nil {
 		if assumeValid {
-			return extract(asset, archivePath, dest)
+			return extract(p, asset, archivePath, dest)
 		} else {
 			resp, err := http.Head(uri.String())
 			if err != nil {
@@ -155,7 +156,7 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 			if resp.Header.Get("Content-Length") != "" {
 				size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 				if err == nil && int64(size) == fi.Size() {
-					return extract(asset, archivePath, dest)
+					return extract(p, asset, archivePath, dest)
 				}
 			}
 			if resp.Header.Get("Accept-Ranges") == "bytes" {
@@ -208,10 +209,10 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 		return err
 	}
 
-	return extract(asset, archivePath, dest)
+	return extract(p, asset, archivePath, dest)
 }
 
-func extract(asset, path, dest string) (err error) {
+func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 	// remove archive once extracted
 	defer func() {
 		if err == nil {
@@ -220,7 +221,7 @@ func extract(asset, path, dest string) (err error) {
 	}()
 
 	// file count
-	files := func() (files int) {
+	files := func() (files int64) {
 		a, err := unarr.NewArchive(path)
 		if err != nil {
 			return 0
@@ -231,7 +232,7 @@ func extract(asset, path, dest string) (err error) {
 		if err != nil {
 			return 0
 		}
-		return len(list)
+		return int64(len(list))
 	}()
 
 	a, err := unarr.NewArchive(path)
@@ -240,20 +241,19 @@ func extract(asset, path, dest string) (err error) {
 	}
 	defer a.Close()
 
-	s := spinner.New(spinner.CharSets[9], 100 * time.Millisecond)
-	log.Printf("Extracting %s (%d files)...\n", asset, files)
+	bar := p.AddBar(files,
+		mpb.PrependDecorators(
+			decor.Name(asset, decor.WC{W: len(asset) + 1, C: decor.DidentRight}),
+			decor.CountersNoUnit("%d / %d", decor.WCSyncWidth),
+		),
+		mpb.AppendDecorators(
+			decor.OnComplete(
+				decor.Percentage(decor.WCSyncWidth),
+				"done!",
+			),
+		),
+	)
 
-	spins := false
-
-	if isatty.IsTerminal(os.Stdout.Fd()) {
-		spins = true
-		s.Suffix = fmt.Sprintf(" Extracting %s (%d files)...", asset, files)
-		s.FinalMSG = fmt.Sprintf("Extracted %s (%d files).\n", asset, files)
-		s.Start()
-		defer s.Stop()
-	}
-
-	extracted := 0
 	for {
 		err := a.Entry()
 		if err != nil {
@@ -284,14 +284,10 @@ func extract(asset, path, dest string) (err error) {
 		modTime := a.ModTime()
 		os.Chtimes(fpath, modTime, modTime)
 
-		extracted++
-		if spins {
-			s.Lock()
-			s.Suffix = fmt.Sprintf(" Extracting %s (%d/%d)...", asset, extracted, files)
-			s.Unlock()
-		}
+		bar.Increment()
 	}
 
+	extracted := bar.Current()
 	if extracted != files {
 		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
 	}
