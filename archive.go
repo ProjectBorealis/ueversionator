@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/gen2brain/go-unarr"
 )
 
@@ -216,26 +218,73 @@ func extract(asset, path, dest string) (err error) {
 		}
 	}()
 
-	sz, err := unarr.NewArchive(path)
-	if err != nil {
-		return err
-	}
-	defer sz.Close()
-
 	// file count
-	list, err := sz.List()
+	files := func() (files int) {
+		a, err := unarr.NewArchive(path)
+		if err != nil {
+			return 0
+		}
+		defer a.Close()
+
+		list, err := a.List()
+		if err != nil {
+			return 0
+		}
+		return len(list)
+	}()
+
+	a, err := unarr.NewArchive(path)
 	if err != nil {
 		return err
 	}
-	files := len(list)
+	defer a.Close()
 
+
+	s := spinner.New(spinner.CharSets[9], 100 * time.Millisecond)
 	log.Printf("Extracting %s (%d files)...\n", asset, files)
+	s.Suffix = fmt.Sprintf(" Extracting %s (%d files)...\n", asset, files)
+	s.FinalMSG = fmt.Sprintf("Extracted %s (%d files).\n", asset, files)
+	s.Start()
+	defer s.Stop()
 
-	_, err = sz.Extract(dest)
-	if err != nil {
-		return err
+	extracted := 0
+	for {
+		err := a.Entry()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return err
+		}
+
+		fpath := filepath.Join(dest, a.Name())
+		if !strings.HasPrefix(fpath, filepath.Clean(dest) + string(os.PathSeparator)) {
+			return fmt.Errorf("%s: illegal file path", fpath)
+		}
+
+		os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
+
+		data, err := a.ReadAll()
+		if err != nil {
+			return err
+		}
+
+		err = ioutil.WriteFile(fpath, data, os.ModePerm)
+		if err != nil {
+			return err
+		}
+
+		modTime := a.ModTime()
+		os.Chtimes(fpath, modTime, modTime)
+
+		extracted++
+		s.Suffix = fmt.Sprintf(" Extracting %s (%d/%d)...\n", asset, extracted, files)
 	}
 
+	if extracted != files {
+		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
+	}
 	return nil
 }
 
