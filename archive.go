@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
+	"github.com/mattn/go-isatty"
 	"github.com/gen2brain/go-unarr"
 )
 
@@ -239,13 +240,18 @@ func extract(asset, path, dest string) (err error) {
 	}
 	defer a.Close()
 
-
 	s := spinner.New(spinner.CharSets[9], 100 * time.Millisecond)
 	log.Printf("Extracting %s (%d files)...\n", asset, files)
-	s.Suffix = fmt.Sprintf(" Extracting %s (%d files)...\n", asset, files)
-	s.FinalMSG = fmt.Sprintf("Extracted %s (%d files).\n", asset, files)
-	s.Start()
-	defer s.Stop()
+
+	spins := false
+
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		spins = true
+		s.Suffix = fmt.Sprintf(" Extracting %s (%d files)...", asset, files)
+		s.FinalMSG = fmt.Sprintf("Extracted %s (%d files).\n", asset, files)
+		s.Start()
+		defer s.Stop()
+	}
 
 	extracted := 0
 	for {
@@ -279,7 +285,11 @@ func extract(asset, path, dest string) (err error) {
 		os.Chtimes(fpath, modTime, modTime)
 
 		extracted++
-		s.Suffix = fmt.Sprintf(" Extracting %s (%d/%d)...\n", asset, extracted, files)
+		if spins {
+			s.Lock()
+			s.Suffix = fmt.Sprintf(" Extracting %s (%d/%d)...", asset, extracted, files)
+			s.Unlock()
+		}
 	}
 
 	if extracted != files {
