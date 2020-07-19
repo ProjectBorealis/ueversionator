@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ProjectBorealis/go7z"
+	"github.com/gen2brain/go-unarr"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
@@ -216,81 +216,26 @@ func extract(asset, path, dest string) (err error) {
 		}
 	}()
 
-	// file count
-	files := func() (files int) {
-		sz, err := go7z.OpenReader(path)
-		if err != nil {
-			return 0
-		}
-		defer sz.Close()
-
-		for {
-			_, err := sz.Next()
-			if err != nil {
-				break
-			}
-			files++
-		}
-		return
-	}()
-
-	sz, err := go7z.OpenReader(path)
+	sz, err := unarr.NewArchive(path)
 	if err != nil {
 		return err
 	}
 	defer sz.Close()
 
+	// file count
+	list, err := sz.List()
+	if err != nil {
+		return err
+	}
+	files := len(list)
+
 	log.Printf("Extracting %s (%d files)...\n", asset, files)
-	extracted := 0
-	lastUpdate := time.Now()
-	for {
-		hdr, err := sz.Next()
-		if err == io.EOF {
-			break // end of archive
-		}
-		if err != nil {
-			return err
-		}
 
-		fpath := filepath.Join(dest, hdr.Name)
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("%s: illegal file path", fpath)
-		}
-
-		// create directory
-		if hdr.IsEmptyStream && !hdr.IsEmptyFile {
-			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
-				return err
-			}
-			extracted++
-			continue
-		}
-
-		// create file
-		os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
-		f, err := os.Create(fpath)
-		if err != nil {
-			return err
-		}
-		if _, err = io.Copy(f, sz); err != nil {
-			f.Close()
-			return err
-		}
-		if err = f.Close(); err != nil {
-			return err
-		}
-		os.Chtimes(fpath, hdr.AccessedAt, hdr.ModifiedAt)
-
-		extracted++
-		if time.Since(lastUpdate) > time.Second || extracted == files {
-			log.Printf("Extracting %s (%d/%d)...\n", asset, extracted, files)
-			lastUpdate = time.Now()
-		}
+	_, err = sz.Extract(dest)
+	if err != nil {
+		return err
 	}
 
-	if extracted != files {
-		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
-	}
 	return nil
 }
 
