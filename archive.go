@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/vbauerster/mpb/decor"
+	"github.com/vbauerster/mpb/v5/decor"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/gen2brain/go-unarr"
-	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/v5"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
@@ -220,17 +220,13 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 		}
 	}()
 
-	a, err := unarr.NewArchive(path)
-	if err != nil {
-		return err
-	}
-	defer a.Close()
-
 	// file count
 	files := func() (files int64) {
+		a, err := unarr.NewArchive(path)
 		if err != nil {
 			return 0
 		}
+		defer a.Close()
 
 		list, err := a.List()
 		if err != nil {
@@ -239,18 +235,31 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 		return int64(len(list))
 	}()
 
-	bar := p.AddBar(files,
+	count := files
+
+	a, err := unarr.NewArchive(path)
+	if err != nil {
+		return err
+	}
+	defer a.Close()
+
+	bar := p.AddBar(count,
 		mpb.PrependDecorators(
 			decor.Name(asset, decor.WC{W: len(asset) + 1, C: decor.DidentRight}),
-			decor.CountersNoUnit("%d / %d", decor.WCSyncWidth),
+			decor.CountersNoUnit("[%d / %d files]", decor.WCSyncWidth),
 		),
 		mpb.AppendDecorators(
 			decor.OnComplete(
-				decor.Percentage(decor.WCSyncWidth),
-				"done!",
+				decor.Percentage(),
+				"Done!",
 			),
+			decor.EwmaSpeed(0, "% .0f files/s", 60),
+			decor.Name(" ETA "),
+			decor.EwmaETA(decor.ET_STYLE_GO, 90),
 		),
 	)
+
+	start := time.Now()
 
 	for {
 		err := a.Entry()
@@ -267,26 +276,31 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 			return fmt.Errorf("%s: illegal file path", fpath)
 		}
 
-		os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
+		// if sizes don't match, or it doesn't exist, write it out
+		if stat, err := os.Stat(fpath); os.IsNotExist(err) || int(stat.Size()) != a.Size() {
+			os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
 
-		data, err := a.ReadAll()
-		if err != nil {
-			return err
+			data, err := a.ReadAll()
+			if err != nil {
+				return err
+			}
+
+			err = ioutil.WriteFile(fpath, data, 0555)
+			if err != nil {
+				return err
+			}
+
+			modTime := a.ModTime()
+			os.Chtimes(fpath, modTime, modTime)
 		}
-
-		err = ioutil.WriteFile(fpath, data, 0555)
-		if err != nil {
-			return err
-		}
-
-		modTime := a.ModTime()
-		os.Chtimes(fpath, modTime, modTime)
 
 		bar.Increment()
+		bar.DecoratorEwmaUpdate(time.Since(start))
+		start = time.Now()
 	}
 
 	extracted := bar.Current()
-	if extracted != files {
+	if extracted != count {
 		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
 	}
 	return nil

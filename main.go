@@ -34,8 +34,6 @@ func main() {
 		}
 
 		fmt.Println(err)
-		fmt.Print("\nPress 'Enter' to continue...")
-		bufio.NewReader(os.Stdin).ReadBytes('\n')
 		os.Exit(1)
 	}
 
