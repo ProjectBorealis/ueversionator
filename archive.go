@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/vbauerster/mpb/v5/decor"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -16,7 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ProjectBorealis/go7z"
+	"github.com/gen2brain/go-unarr"
+	"github.com/vbauerster/mpb/v5"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
@@ -97,6 +100,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	}
 
 	var wg sync.WaitGroup
+	p := mpb.New(mpb.WithWaitGroup(&wg))
 	for idx := range assetInfo {
 		if !assetInfo[idx].enabled {
 			continue
@@ -111,7 +115,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 				return
 			}
 
-			assetInfo[i].err = download(baseURL, rootDir, name, assetInfo[i].name, name, options.AssumeValid)
+			assetInfo[i].err = download(p, baseURL, rootDir, name, assetInfo[i].name, name, options.AssumeValid)
 		}(idx, version)
 	}
 	wg.Wait()
@@ -126,7 +130,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	return dest, err
 }
 
-func download(baseURL, rootDir, name, asset, version string, assumeValid bool) error {
+func download(p *mpb.Progress, baseURL, rootDir, name, asset, version string, assumeValid bool) error {
 	urlStr := fmt.Sprintf("%s/%s-%s.7z", baseURL, asset, version)
 	uri, err := url.Parse(urlStr)
 	if err != nil {
@@ -140,7 +144,7 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 	archivePath := filepath.Join(rootDir, asset) + "-" + name + ".7z"
 	if fi, err := os.Stat(archivePath); err == nil {
 		if assumeValid {
-			return extract(asset, archivePath, dest)
+			return extract(p, asset, archivePath, dest)
 		} else {
 			resp, err := http.Head(uri.String())
 			if err != nil {
@@ -152,7 +156,7 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 			if resp.Header.Get("Content-Length") != "" {
 				size, err := strconv.Atoi(resp.Header.Get("Content-Length"))
 				if err == nil && int64(size) == fi.Size() {
-					return extract(asset, archivePath, dest)
+					return extract(p, asset, archivePath, dest)
 				}
 			}
 			if resp.Header.Get("Accept-Ranges") == "bytes" {
@@ -205,10 +209,10 @@ func download(baseURL, rootDir, name, asset, version string, assumeValid bool) e
 		return err
 	}
 
-	return extract(asset, archivePath, dest)
+	return extract(p, asset, archivePath, dest)
 }
 
-func extract(asset, path, dest string) (err error) {
+func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 	// remove archive once extracted
 	defer func() {
 		if err == nil {
@@ -217,78 +221,86 @@ func extract(asset, path, dest string) (err error) {
 	}()
 
 	// file count
-	files := func() (files int) {
-		sz, err := go7z.OpenReader(path)
+	files := func() (files int64) {
+		a, err := unarr.NewArchive(path)
 		if err != nil {
 			return 0
 		}
-		defer sz.Close()
+		defer a.Close()
 
-		for {
-			_, err := sz.Next()
-			if err != nil {
-				break
-			}
-			files++
+		list, err := a.List()
+		if err != nil {
+			return 0
 		}
-		return
+		return int64(len(list))
 	}()
 
-	sz, err := go7z.OpenReader(path)
+	count := files
+
+	a, err := unarr.NewArchive(path)
 	if err != nil {
 		return err
 	}
-	defer sz.Close()
+	defer a.Close()
 
-	log.Printf("Extracting %s (%d files)...\n", asset, files)
-	extracted := 0
-	lastUpdate := time.Now()
+	bar := p.AddBar(count,
+		mpb.PrependDecorators(
+			decor.Name(asset, decor.WC{W: len(asset) + 1, C: decor.DidentRight}),
+			decor.CountersNoUnit("[%d / %d files]", decor.WCSyncWidth),
+		),
+		mpb.AppendDecorators(
+			decor.OnComplete(
+				decor.Percentage(),
+				"Done!",
+			),
+			decor.EwmaSpeed(0, "% .0f files/s", 60),
+			decor.Name(" ETA "),
+			decor.EwmaETA(decor.ET_STYLE_GO, 90),
+		),
+	)
+
+	start := time.Now()
+
 	for {
-		hdr, err := sz.Next()
-		if err == io.EOF {
-			break // end of archive
-		}
+		err := a.Entry()
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
 			return err
 		}
 
-		fpath := filepath.Join(dest, hdr.Name)
-		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+		fpath := filepath.Join(dest, a.Name())
+		if !strings.HasPrefix(fpath, filepath.Clean(dest) + string(os.PathSeparator)) {
 			return fmt.Errorf("%s: illegal file path", fpath)
 		}
 
-		// create directory
-		if hdr.IsEmptyStream && !hdr.IsEmptyFile {
-			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
+		// if sizes don't match, or it doesn't exist, write it out
+		if stat, err := os.Stat(fpath); os.IsNotExist(err) || int(stat.Size()) != a.Size() {
+			os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
+
+			data, err := a.ReadAll()
+			if err != nil {
 				return err
 			}
-			extracted++
-			continue
+
+			err = ioutil.WriteFile(fpath, data, 0555)
+			if err != nil {
+				return err
+			}
+
+			modTime := a.ModTime()
+			os.Chtimes(fpath, modTime, modTime)
 		}
 
-		// create file
-		os.MkdirAll(filepath.Dir(fpath), os.ModePerm)
-		f, err := os.Create(fpath)
-		if err != nil {
-			return err
-		}
-		if _, err = io.Copy(f, sz); err != nil {
-			f.Close()
-			return err
-		}
-		if err = f.Close(); err != nil {
-			return err
-		}
-		os.Chtimes(fpath, hdr.AccessedAt, hdr.ModifiedAt)
-
-		extracted++
-		if time.Since(lastUpdate) > time.Second || extracted == files {
-			log.Printf("Extracting %s (%d/%d)...\n", asset, extracted, files)
-			lastUpdate = time.Now()
-		}
+		bar.Increment()
+		bar.DecoratorEwmaUpdate(time.Since(start))
+		start = time.Now()
 	}
 
-	if extracted != files {
+	extracted := bar.Current()
+	if extracted != count {
 		return fmt.Errorf("error: expected to extract %d items, only extracted %d", files, extracted)
 	}
 	return nil
