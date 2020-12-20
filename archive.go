@@ -220,13 +220,17 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 		}
 	}()
 
+	a, err := unarr.NewArchive(path)
+	if err != nil {
+		return err
+	}
+	defer a.Close()
+
 	// file count
 	files := func() (files int64) {
-		a, err := unarr.NewArchive(path)
 		if err != nil {
 			return 0
 		}
-		defer a.Close()
 
 		list, err := a.List()
 		if err != nil {
@@ -234,12 +238,6 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 		}
 		return int64(len(list))
 	}()
-
-	a, err := unarr.NewArchive(path)
-	if err != nil {
-		return err
-	}
-	defer a.Close()
 
 	bar := p.AddBar(files,
 		mpb.PrependDecorators(
@@ -276,7 +274,7 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 			return err
 		}
 
-		err = ioutil.WriteFile(fpath, data, os.ModePerm)
+		err = ioutil.WriteFile(fpath, data, 0555)
 		if err != nil {
 			return err
 		}
