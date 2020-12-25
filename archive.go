@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/vbauerster/mpb/v5/cwriter"
 	"github.com/vbauerster/mpb/v5/decor"
 	"io"
 	"io/ioutil"
@@ -100,7 +101,11 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	}
 
 	var wg sync.WaitGroup
-	p := mpb.New(mpb.WithWaitGroup(&wg))
+	duration := time.Second * 10
+	if cwriter.IsTerminal(int(os.Stdout.Fd())) {
+		duration = time.Millisecond * 120
+	}
+	p := mpb.New(mpb.WithWaitGroup(&wg), mpb.WithRefreshRate(duration))
 	for idx := range assetInfo {
 		if !assetInfo[idx].enabled {
 			continue
