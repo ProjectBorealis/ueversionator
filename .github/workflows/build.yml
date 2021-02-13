@@ -1,0 +1,20 @@
+name: build ue4versionator
+
+on: [ push, pull_request ]
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: build ue4versionator on Windows
+      shell: bash
+      run: ./build.sh
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: build ue4versionator on Linux
+      shell: bash
+      run: ./build.sh
