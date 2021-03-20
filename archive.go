@@ -101,11 +101,22 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 	}
 
 	var wg sync.WaitGroup
-	duration := time.Second * 10
-	if cwriter.IsTerminal(int(os.Stdout.Fd())) {
-		duration = time.Millisecond * 120
-	}
+	duration := time.Millisecond * 120
 	p := mpb.New(mpb.WithWaitGroup(&wg), mpb.WithRefreshRate(duration))
+	if !cwriter.IsTerminal(int(os.Stdout.Fd())) {
+		p = mpb.New(
+			mpb.WithWaitGroup(&wg),
+			mpb.ContainerOptional(
+				// setting to nil will:
+				// set output to ioutil.Discard and disable refresh rate cycle, in
+				// order not to consume much CPU. Hovewer a single refresh still will
+				// be triggered on bar complete event, per each bar.
+				mpb.WithOutput(nil),
+				true,
+			),
+		)
+	}
+
 	for idx := range assetInfo {
 		if !assetInfo[idx].enabled {
 			continue
