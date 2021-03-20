@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/go-ini/ini"
-	"golang.org/x/sys/windows/registry"
 )
 
 var (
@@ -25,17 +23,17 @@ var (
 	assumeValid   = flag.Bool("assume-valid", false, "assumes current archive is valid, if present")
 )
 
-func main() {
-	flag.Parse()
-
-	handleError := func(err error) {
-		if err == nil {
-			return
-		}
-
-		fmt.Println(err)
-		os.Exit(1)
+func handleError(err error) {
+	if err == nil {
+		return
 	}
+
+	fmt.Println(err)
+	os.Exit(1)
+}
+
+func ue4versionator() (string, string, error) {
+	flag.Parse()
 
 	// load ini config
 	cfg, err := ini.LooseLoad(*iniConfig, *userIniConfig)
@@ -78,18 +76,8 @@ func main() {
 		FetchSymbols: shouldFetchSymbols,
 		AssumeValid: *assumeValid,
 	})
-	if err != nil {
-		handleError(err)
-	}
 
-	log.Printf("Registering %s\n", version)
-	key, _, err := registry.CreateKey(registry.CURRENT_USER, `Software\Epic Games\Unreal Engine\Builds`, registry.QUERY_VALUE|registry.SET_VALUE)
-	handleError(err)
-
-	defer key.Close()
-
-	err = key.SetStringValue(version, dest)
-	handleError(err)
+	return version, dest, err
 }
 
 func getDownloadDirectory(path string) string {
