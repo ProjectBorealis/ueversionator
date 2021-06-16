@@ -7,6 +7,8 @@ ue4versionator is a tool to download custom engine builds based on a uproject's
 Builds are expected to be archived with 7zip, and both an engine and symbols
 archive are supported.
 
+ue4versionator is expected to be at the root level of your game project, i.e. with the `.uproject` file.
+
 ## Usage examples
 
 Examples on how to use/run ue4versionator are provided in the `examples/` folder.
