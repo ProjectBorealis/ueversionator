@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/vbauerster/mpb/v5/cwriter"
-	"github.com/vbauerster/mpb/v5/decor"
+	"github.com/vbauerster/mpb/v7/cwriter"
+	"github.com/vbauerster/mpb/v7/decor"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/gen2brain/go-unarr"
-	"github.com/vbauerster/mpb/v5"
+	"github.com/vbauerster/mpb/v7"
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
