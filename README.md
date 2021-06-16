@@ -7,6 +7,12 @@ ue4versionator is a tool to download custom engine builds based on a uproject's
 Builds are expected to be archived with 7zip, and both an engine and symbols
 archive are supported.
 
+## Usage examples
+
+Examples on how to use/run ue4versionator are provided in the `examples/` folder.
+
+## Command line options
+
 ```
 Usage of ue4versionator:
   -assume-valid
@@ -63,6 +69,7 @@ If `--with-symbols` is used, a debugging symbols archive is expected to be
 found with the filename `bundlename-symbols-<version>.7z`.
 
 #### Example engine build
+
 We create our custom builds and archive them with the following commands:
 
 ```
