@@ -97,7 +97,7 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 		err     error
 	}{
 		{options.EngineBundle, true, GetBundleVerificationFile(options.EngineBundle) + "exe", nil},
-		{options.EngineBundle + "-symbols", options.FetchSymbols, GetBundleVerificationFile(options.EngineBundle) + "pdb", nil},
+		{options.EngineBundle + "-symbols", options.FetchSymbols, GetBundleVerificationFile("editor") + "pdb", nil},
 	}
 
 	var wg sync.WaitGroup
