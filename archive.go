@@ -74,14 +74,14 @@ func GetEngineAssociation(path string) (string, error) {
 //
 // If the bundle contains "engine", then it is considered an engine bundle, and thus must include Unreal Game.
 // Else, it is considered an editor bundle, and must include Unreal Editor.
-func GetBundleVerificationFile(bundle string, bool UsesUE5) string {
+func GetBundleVerificationFile(bundle string, usesUE5 bool) string {
 	if strings.Contains(bundle, "engine") {
-		if UsesUE5 {
+		if usesUE5 {
 			return "Engine/Binaries/Win64/UnrealGame."
 		}
 		return "Engine/Binaries/Win64/UE4Game."
 	} else {
-		if UsesUE5 {
+		if usesUE5 {
 			return "Engine/Binaries/Win64/UnrealEditor."
 		}
 		return "Engine/Binaries/Win64/UE4Editor."
