@@ -35,6 +35,7 @@ type DownloadOptions struct {
 	EngineBundle string
 	FetchSymbols bool
 	AssumeValid bool
+	UsesUE5 bool
 }
 
 // GetEngineAssociation returns a .uproject engine association.
