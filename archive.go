@@ -24,11 +24,11 @@ import (
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
-const EngineAssociationPrefix = "ue4v:"
+const EngineAssociationPrefix = "uev:"
 
 // ErrEngineAssociationNeedsPrefix is returned if the association has no
-// ue4v prefix.
-var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4v:' prefix")
+// uev prefix.
+var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'uev:' prefix")
 
 // DownloadOptions specifies what content for the version to download.
 type DownloadOptions struct {
@@ -71,12 +71,18 @@ func GetEngineAssociation(path string) (string, error) {
 
 // GetBundleVerificationFile returns the file that should exist for this bundle as a basic integrity check
 //
-// If the bundle contains "engine", then it is considered an engine bundle, and thus must include UE4Game.
-// Else, it is considered an editor bundle, and must include UE4Editor.
-func GetBundleVerificationFile(bundle string) string {
+// If the bundle contains "engine", then it is considered an engine bundle, and thus must include Unreal Game.
+// Else, it is considered an editor bundle, and must include Unreal Editor.
+func GetBundleVerificationFile(bundle string, bool UsesUE5) string {
 	if strings.Contains(bundle, "engine") {
+		if UsesUE5 {
+			return "Engine/Binaries/Win64/UnrealGame."
+		}
 		return "Engine/Binaries/Win64/UE4Game."
 	} else {
+		if UsesUE5 {
+			return "Engine/Binaries/Win64/UnrealEditor."
+		}
 		return "Engine/Binaries/Win64/UE4Editor."
 	}
 }
@@ -96,8 +102,8 @@ func FetchEngine(rootDir string, baseURL, version string, options DownloadOption
 		exists  string
 		err     error
 	}{
-		{options.EngineBundle, true, GetBundleVerificationFile(options.EngineBundle) + "exe", nil},
-		{options.EngineBundle + "-symbols", options.FetchSymbols, GetBundleVerificationFile("editor") + "pdb", nil},
+		{options.EngineBundle, true, GetBundleVerificationFile(options.EngineBundle, options.UsesUE5) + "exe", nil},
+		{options.EngineBundle + "-symbols", options.FetchSymbols, GetBundleVerificationFile("editor", options.UsesUE5) + "pdb", nil},
 	}
 
 	var wg sync.WaitGroup

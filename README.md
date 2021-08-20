@@ -1,47 +1,47 @@
-# ue4versionator
+# ueversionator
 
-ue4versionator is a tool to download custom engine builds based on a uproject's
+ueversionator is a tool to download custom engine builds based on a uproject's
 `EngineAssociation` key. Once downloaded, the engine is extracted to a user specified
-`ue4/` folder and registered for use.
+`ue/` folder and registered for use.
 
 Builds are expected to be archived with 7zip, and both an engine and symbols
 archive are supported.
 
-ue4versionator is expected to be at the root level of your game project, i.e. with the `.uproject` file.
+ueversionator is expected to be at the root level of your game project, i.e. with the `.uproject` file.
 
 ## Usage examples
 
-Examples on how to use/run ue4versionator are provided in the `examples/` folder.
+Examples on how to use/run ueversionator are provided in the `examples/` folder.
 
 ## Command line options
 
 ```
-Usage of ue4versionator:
+Usage of ueversionator:
   -assume-valid
         assumes current archive is valid, if present
   -bundle string
-        request UE4 build bundle (default "editor")
+        request UE build bundle (default "editor")
   -config string
-        ue4versionator config file (default ".ue4versionator")
+        ueversionator config file (default ".ueversionator")
   -user-config string
-        ue4versionator user config file (default ".ue4v-user")
+        ueversionator user config file (default ".uev-user")
   -virgin
         ask configuration options like the first time
   -with-symbols
-        include UE4 engine debug symbols
+        include UE engine debug symbols
 ```
 
-## Configuring ue4versionator
+## Configuring ueversionator
 
 ### uproject association
 
-A UE4 uproject file's `EngineAssociation` key needs to be modified with a
-`ue4v:` prefix, followed by the version of the custom build.
+A UE uproject file's `EngineAssociation` key needs to be modified with a
+`uev:` prefix, followed by the version of the custom build.
 
 ```
 {
     "FileVersion": 3,
-    "EngineAssociation": "ue4v:4.24-custom",
+    "EngineAssociation": "uev:4.24-custom",
     "Category": "",
     "Description": "",
     "Modules": [
@@ -51,19 +51,19 @@ A UE4 uproject file's `EngineAssociation` key needs to be modified with a
 }
 ```
 
-### ue4versionator config
+### ueversionator config
 
-A simple configuration file is used to tell ue4versionator where to fetch builds
+A simple configuration file is used to tell ueversionator where to fetch builds
 from.
 
 ```
-[ue4versionator]
+[ueversionator]
 baseurl = https://downloads.example.com/builds
 ```
 
-ue4versionator expects builds to be found under this location, with the
+ueversionator expects builds to be found under this location, with the
 filename `bundlename-<version>.7z`, where the version matches the
-`EngineAssociation` key without the `ue4v:` prefix. So for the
+`EngineAssociation` key without the `uev:` prefix. So for the
 uproject example above, the build would be expected to be found at
 `https://downloads.example.com/builds/engine-4.24-custom.7z`.
 
@@ -75,7 +75,7 @@ found with the filename `bundlename-symbols-<version>.7z`.
 We create our custom builds and archive them with the following commands:
 
 ```
-# Build UE4 engine
+# Build Unreal Engine
 .\Engine\Build\BatchFiles\RunUAT.bat BuildGraph -Target="Make Installed Build Win64" -Script="Engine/Build/InstalledEngineBuild.xml" -Set:WithDDC=true -Set:HostPlatformEditorOnly=true -Set:WithFeaturePacks=false
 
 # Create archive without debugging symbols

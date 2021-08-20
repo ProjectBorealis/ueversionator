@@ -1,4 +1,4 @@
-name: build ue4versionator
+name: build ueversionator
 
 on: [ push, pull_request ]
 
@@ -7,22 +7,22 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
-    - name: build ue4versionator on Windows
+    - name: build ueversionator on Windows
       shell: bash
       run: ./build.sh
     - uses: actions/upload-artifact@v2
       with:
-        name: ue4versionator.windows
-        path: ue4versionator.exe
+        name: ueversionator.windows
+        path: ueversionator.exe
 
   linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: build ue4versionator on Linux
+    - name: build ueversionator on Linux
       shell: bash
       run: ./build.sh
     - uses: actions/upload-artifact@v2
       with:
-        name: ue4versionator.linux
-        path: ue4versionator
+        name: ueversionator.linux
+        path: ueversionator

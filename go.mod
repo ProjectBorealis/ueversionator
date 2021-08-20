@@ -1,4 +1,4 @@
-module github.com/ProjectBorealis/ue4versionator
+module github.com/ProjectBorealis/ueversionator
 
 go 1.14
 
