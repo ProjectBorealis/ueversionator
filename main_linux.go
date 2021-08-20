@@ -1,5 +1,6 @@
 package main
 
 func main() {
-	ueversionator()
+	_, _, err := ueversionator()
+	handleError(err)
 }
