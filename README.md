@@ -2,7 +2,7 @@
 
 ueversionator is a tool to download custom engine builds based on a uproject's
 `EngineAssociation` key. Once downloaded, the engine is extracted to a user specified
-`ue/` folder and registered for use.
+base folder and registered for use.
 
 Builds are expected to be archived with 7zip, and both an engine and symbols
 archive are supported.
