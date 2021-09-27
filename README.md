@@ -19,10 +19,14 @@ Examples on how to use/run ueversionator are provided in the `examples/` folder.
 Usage of ueversionator:
   -assume-valid
         assumes current archive is valid, if present
+  -basedir string
+        base directory to download engine bundles in (default "ue4")
   -bundle string
         request UE build bundle (default "editor")
   -config string
         ueversionator config file (default ".ueversionator")
+  -ue5
+        UE5 build compat
   -user-config string
         ueversionator user config file (default ".uev-user")
   -virgin
