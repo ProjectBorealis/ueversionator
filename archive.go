@@ -261,6 +261,8 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 
 	count := files
 
+	fmt.Printf("Extracting %s\n", path)
+
 	a, err := unarr.NewArchive(path)
 	if err != nil {
 		return err
