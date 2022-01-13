@@ -1,5 +1,7 @@
 github.com/ProjectBorealis/go-unarr v0.1.3-beta.2 h1:mXW9NDQhrAxnBwrt8ERQiI3m2L9Ewb6BcLZ7Ykkhqo8=
 github.com/ProjectBorealis/go-unarr v0.1.3-beta.2/go.mod h1:P05CsEe8jVEXhxqXqp9mFKUKFV0BKpFmtgNWf8Mcoos=
+github.com/ProjectBorealis/go-unarr v0.1.3-beta.3 h1:OzTHsc9y+2BbAFcN/Y7ZAzIYXcKOd7QFyjeC3ISTSvg=
+github.com/ProjectBorealis/go-unarr v0.1.3-beta.3/go.mod h1:P05CsEe8jVEXhxqXqp9mFKUKFV0BKpFmtgNWf8Mcoos=
 github.com/VividCortex/ewma v1.2.0 h1:f58SaIzcDXrSy3kWaHNvuJgJ3Nmz59Zji6XoJR/q1ow=
 github.com/VividCortex/ewma v1.2.0/go.mod h1:nz4BbCtbLyFDeC9SUHbtcT5644juEuWfUAUnGx7j5l4=
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpHMqeKTCYkitsPqHNxTmd4SNR5r94FGM8=

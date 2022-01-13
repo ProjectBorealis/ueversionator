@@ -10,4 +10,4 @@ require (
 	golang.org/x/sys v0.0.0-20220111092808-5a964db01320
 )
 
-replace github.com/gen2brain/go-unarr => github.com/ProjectBorealis/go-unarr v0.1.3-beta.2
+replace github.com/gen2brain/go-unarr => github.com/ProjectBorealis/go-unarr v0.1.3-beta.3
