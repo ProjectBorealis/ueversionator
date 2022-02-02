@@ -40,12 +40,12 @@ Usage of ueversionator:
 ### uproject association
 
 A UE uproject file's `EngineAssociation` key needs to be modified with a
-`ue4v:` prefix, followed by the version of the custom build.
+`uev:` prefix, followed by the version of the custom build.
 
 ```
 {
     "FileVersion": 3,
-    "EngineAssociation": "ue4v:4.24-custom",
+    "EngineAssociation": "uev:4.24-custom",
     "Category": "",
     "Description": "",
     "Modules": [
@@ -67,7 +67,7 @@ baseurl = https://downloads.example.com/builds
 
 ueversionator expects builds to be found under this location, with the
 filename `bundlename-<version>.7z`, where the version matches the
-`EngineAssociation` key without the `ue4v:` prefix. So for the
+`EngineAssociation` key without the `uev:` prefix. So for the
 uproject example above, the build would be expected to be found at
 `https://downloads.example.com/builds/engine-4.24-custom.7z`.
 

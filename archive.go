@@ -24,12 +24,11 @@ import (
 )
 
 // EngineAssociationPrefix is the required engine association prefix.
-// TODO: uev prefix
-const EngineAssociationPrefix = "ue4v:"
+const EngineAssociationPrefix = "uev:"
 
 // ErrEngineAssociationNeedsPrefix is returned if the association has no
-// ue4v prefix.
-var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'ue4v:' prefix")
+// uev prefix.
+var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'uev:' prefix")
 
 // DownloadOptions specifies what content for the version to download.
 type DownloadOptions struct {
