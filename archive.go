@@ -311,7 +311,7 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 				return err
 			}
 
-			err = ioutil.WriteFile(fpath, data, 0555)
+			err = ioutil.WriteFile(fpath, data, os.ModePerm)
 			if err != nil {
 				return err
 			}
