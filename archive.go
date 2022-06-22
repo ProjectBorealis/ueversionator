@@ -34,8 +34,8 @@ var ErrEngineAssociationNeedsPrefix = errors.New("engine association needs 'uev:
 type DownloadOptions struct {
 	EngineBundle string
 	FetchSymbols bool
-	AssumeValid bool
-	UsesUE5 bool
+	AssumeValid  bool
+	UsesUE5      bool
 }
 
 // GetEngineAssociation returns a .uproject engine association.
@@ -297,7 +297,7 @@ func extract(p *mpb.Progress, asset, path, dest string) (err error) {
 		}
 
 		fpath := filepath.Join(dest, a.Name())
-		if !strings.HasPrefix(fpath, filepath.Clean(dest) + string(os.PathSeparator)) {
+		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
 			return fmt.Errorf("%s: illegal file path", fpath)
 		}
 

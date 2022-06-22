@@ -1,8 +1,8 @@
 package main
 
 import (
-	"log"
 	"golang.org/x/sys/windows/registry"
+	"log"
 )
 
 func main() {
