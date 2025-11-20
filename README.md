@@ -20,7 +20,7 @@ Usage of ueversionator:
   -assume-valid
         assumes current archive is valid, if present
   -basedir string
-        base directory to download engine bundles in (default "ue4")
+        base directory to download engine bundles in (default "ue")
   -bundle string
         request UE build bundle (default "editor")
   -config string

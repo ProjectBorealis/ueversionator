@@ -17,7 +17,7 @@ import (
 var (
 	iniConfig     = flag.String("config", ".ueversionator", "ueversionator config file")
 	userIniConfig = flag.String("user-config", ".uev-user", "ueversionator user config file")
-	baseDir       = flag.String("basedir", "ue4", "base directory to download engine bundles in")
+	baseDir       = flag.String("basedir", "ue", "base directory to download engine bundles in")
 	bundle        = flag.String("bundle", "editor", "request UE build bundle")
 	ue5           = flag.Bool("ue5", false, "UE5 build compat")
 	fetchSymbols  = flag.Bool("with-symbols", false, "include UE engine debug symbols")
@@ -67,10 +67,7 @@ func ueversionator() (string, string, error) {
 	shouldFetchSymbols := *fetchSymbols
 
 	if !shouldFetchSymbols {
-		section := "ue4v-user"
-		if *ue5 {
-			section = "uev-user"
-		}
+		section := "uev-user"
 		symbolsConfig, err := cfg.Section(section).GetKey("symbols")
 		if err == nil {
 			shouldFetchSymbols = symbolsConfig.MustBool(false)
@@ -89,10 +86,7 @@ func ueversionator() (string, string, error) {
 
 func getDownloadDirectory(path string) string {
 	cfg, _ := ini.LooseLoad(*userIniConfig)
-	section := "ue4v-user"
-	if *ue5 {
-		section = "uev-user"
-	}
+	section := "uev-user"
 	key, err := cfg.Section(section).GetKey("download_dir")
 	if err != nil {
 		key, _ = cfg.Section(section).NewKey("download_dir", "")
