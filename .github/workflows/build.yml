@@ -6,11 +6,11 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: build ueversionator on Windows
       shell: bash
       run: ./build.sh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: ueversionator.windows
         path: ueversionator.exe
@@ -18,11 +18,11 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: build ueversionator on Linux
       shell: bash
       run: ./build.sh
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: ueversionator.linux
         path: ueversionator
