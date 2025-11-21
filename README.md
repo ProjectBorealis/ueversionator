@@ -9,6 +9,14 @@ archive are supported.
 
 ueversionator is expected to be at the root level of your game project, i.e. with the `.uproject` file.
 
+## Legacy Note
+
+ueversionator is now considered to be a legacy project. It is a simple way to distribute engine builds, and can work fine,
+but we recommend using [CliqueSync (formerly PBSync)](https://github.com/ProjectBorealis/CliqueSync) to synchronize Unreal
+Engine projects and engine distributions. It provides an all-in-one solution for syncing both project binaries and engine
+distributions. It implements much more advanced compression and differential download techniques for engine downloads,
+and supports a variety of project setups.
+
 ## Usage examples
 
 Examples on how to use/run ueversionator are provided in the `examples/` folder.
@@ -88,3 +96,4 @@ We create our custom builds and archive them with the following commands:
 # Create archive with debugging symbols
 7za.exe a -bsp1 -mx9 -md512m -mfb273 -mlc4 -mmt8 "editor-symbols-%VERSION%.7z" "Engine\**\*.pdb" -r
 ```
+
